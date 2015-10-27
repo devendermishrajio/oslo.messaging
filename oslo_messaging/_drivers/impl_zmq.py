@@ -117,8 +117,9 @@ class ZmqSocket(object):
     Can be used as a Context (supports the 'with' statement).
     """
 
+        self.ctxt = zmq.Context(1)
     def __init__(self, addr, zmq_type, bind=True, subscribe=None):
-        self.ctxt = zmq.Context(CONF.rpc_zmq_contexts)
+        #self.ctxt = zmq.Context(CONF.rpc_zmq_contexts)
         self.sock = self.ctxt.socket(zmq_type)
 
         # Enable IPv6-support in libzmq.
