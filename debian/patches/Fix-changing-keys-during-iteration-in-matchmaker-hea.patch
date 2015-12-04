@@ -1,0 +1,33 @@
+From b8b7f6a81fcf13ac93c204ef019268e075f00900 Mon Sep 17 00:00:00 2001
+From: Li Ma <skywalker.nick@gmail.com>
+Date: Tue, 17 Mar 2015 00:07:12 -0700
+Subject: [PATCH 7/8] Fix changing keys during iteration in matchmaker
+ heartbeat
+
+When starting heartbeat in matchmaker-redis, keys may be changed
+during iteration and a runtime exception is thrown as follows:
+
+RuntimeError: dictionary changed size during iteration
+
+Change-Id: I016a449674619294196055614c62c2856002291c
+Closes-Bug: #1432966
+---
+ oslo_messaging/_drivers/matchmaker.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/oslo_messaging/_drivers/matchmaker.py b/oslo_messaging/_drivers/matchmaker.py
+index bea3f7f..82b0fbd 100644
+--- a/oslo_messaging/_drivers/matchmaker.py
++++ b/oslo_messaging/_drivers/matchmaker.py
+@@ -164,7 +164,7 @@ class HeartbeatMatchMakerBase(MatchMakerBase):
+         Use start_heartbeat to spawn a heartbeat greenthread,
+         which loops this method.
+         """
+-        for key, host in self.host_topic:
++        for key, host in self.host_topic.keys():
+             self.ack_alive(key, host)
+ 
+     def ack_alive(self, key, host):
+-- 
+2.1.4
+
