@@ -1,0 +1,5 @@
+skip-qpid-tests.patch
+0001-rabbit-more-precise-iterconsume-timeout.patch
+0002-rabbit-fix-timeout-timer-when-duration-is-None.patch
+0003-Declare-DirectPublisher-exchanges-with-passive-True.patch
+redeclare-consumers-when-ack-requeue-fails.patch

@@ -1,0 +1,48 @@
+From b91a5d40b281ec8dbd0612bd1f0958ed3209cba9 Mon Sep 17 00:00:00 2001
+From: Mehdi Abaakouk <mehdi.abaakouk@enovance.com>
+Date: Tue, 5 May 2015 10:29:22 +0200
+Subject: [PATCH 1/1] rabbit: redeclare consumers when ack/requeue fail
+
+In case the acknowledgement or requeue of a message fail,
+the kombu transport can be disconnected
+
+In this case, we must redeclare our consumers.
+
+This changes fixes that.
+
+This have no tests because the kombu memory transport we use in our tests
+cannot be in disconnected state.
+
+Closes-bug: #1448650
+
+Change-Id: I5991a4cf827411bc27c857561d97461212a17f40
+(cherry picked from commit 415db68b67368d7c8aa550e7108122200816e665)
+
+Conflicts:
+	oslo_messaging/_drivers/impl_rabbit.py
+	oslo_messaging/tests/drivers/test_impl_rabbit.py
+---
+ oslo/messaging/_drivers/impl_rabbit.py | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/oslo/messaging/_drivers/impl_rabbit.py b/oslo/messaging/_drivers/impl_rabbit.py
+index 0182800..7cbff78 100644
+--- a/oslo/messaging/_drivers/impl_rabbit.py
++++ b/oslo/messaging/_drivers/impl_rabbit.py
+@@ -705,6 +705,13 @@ class Connection(object):
+                           exc)
+ 
+         def _consume():
++            # NOTE(sileht): in case the acknowledgement or requeue of a
++            # message fail, the kombu transport can be disconnected
++            # In this case, we must redeclare our consumers, so raise
++            # a recoverable error to trigger the reconnection code.
++            if not self.connection.connected:
++                raise self.connection.recoverable_connection_errors[0]
++
+             if self.do_consume:
+                 queues_head = self.consumers[:-1]  # not fanout.
+                 queues_tail = self.consumers[-1]  # fanout
+-- 
+2.1.4
+
