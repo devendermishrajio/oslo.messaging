@@ -33,7 +33,7 @@ Depends: python-babel,
          python-oslo.config,
          python-six,
          python-stevedore,
-         python-yaml,
+         python-yaml
 Description: oslo messaging library
  The oslo messaging API supports RPC and notifications over a number of
  different messaging transports.
