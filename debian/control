@@ -34,6 +34,7 @@ Depends: python-babel,
          python-six,
          python-stevedore,
          python-yaml
+XS-Python-Version: >=2.7
 Description: oslo messaging library
  The oslo messaging API supports RPC and notifications over a number of
  different messaging transports.
