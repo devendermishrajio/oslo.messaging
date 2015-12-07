@@ -51,8 +51,7 @@ Depends:
  python-six (>= 1.9.0),
  python-stevedore (>= 1.1.0),
  python-yaml,
- ${misc:Depends},
- ${python:Depends}
+ ${misc:Depends}
 Suggests: python-zmq
 Description: Oslo Messaging RPC library
  The Oslo Messaging API supports RPC and notifications over a number of
