@@ -1,0 +1,6 @@
+# Patch for vivid - drop once aioeventlet and trollius in main
+disable-new-executors.patch
+# ZMQ patches
+Fix-changing-keys-during-iteration-in-matchmaker-hea.patch
+Add-pluggability-for-matchmakers.patch
+zmq-client-pooling.patch
