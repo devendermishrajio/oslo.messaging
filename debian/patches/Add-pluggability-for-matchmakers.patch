@@ -1,0 +1,87 @@
+From 444cc7ac3882c3ad8bf7bd9fbb0959b70fd83841 Mon Sep 17 00:00:00 2001
+From: Li Ma <skywalker.nick@gmail.com>
+Date: Wed, 4 Mar 2015 22:14:05 -0800
+Subject: [PATCH 8/8] Add pluggability for matchmakers
+
+Closes-Bug: #1291701
+
+Change-Id: I2a10eca0760ef84f34e5dcdb8132845b88cd4b98
+---
+ oslo_messaging/_drivers/impl_zmq.py | 32 ++++++++++++++++++++++----------
+ setup.cfg                           |  6 ++++++
+ 2 files changed, 28 insertions(+), 10 deletions(-)
+
+--- a/oslo_messaging/_drivers/impl_zmq.py
++++ b/oslo_messaging/_drivers/impl_zmq.py
+@@ -31,11 +31,12 @@ from oslo_utils import excutils
+ from oslo_utils import importutils
+ import six
+ from six import moves
++from stevedore import driver
+ 
+ from oslo_messaging._drivers import base
+ from oslo_messaging._drivers import common as rpc_common
+ from oslo_messaging._executors import base as executor_base  # FIXME(markmc)
+-from oslo_messaging._i18n import _, _LE
++from oslo_messaging._i18n import _, _LE, _LW
+ 
+ 
+ zmq = importutils.try_import('eventlet.green.zmq')
+@@ -56,8 +57,7 @@ zmq_opts = [
+     # The module.Class to use for matchmaking.
+     cfg.StrOpt(
+         'rpc_zmq_matchmaker',
+-        default=('oslo_messaging._drivers.'
+-                 'matchmaker.MatchMakerLocalhost'),
++        default='local',
+         help='MatchMaker driver.',
+     ),
+ 
+@@ -793,14 +793,26 @@ def _multi_send(method, context, topic,
+ 
+ def _get_matchmaker(*args, **kwargs):
+     global matchmaker
++    mm_name = CONF.rpc_zmq_matchmaker
++
++    # Back compatibility for old class names
++    mm_mapping = {
++        'oslo_messaging._drivers.matchmaker_redis.MatchMakerRedis': 'redis',
++        'oslo_messaging._drivers.matchmaker_ring.MatchMakerRing': 'ring',
++        'oslo_messaging._drivers.matchmaker.MatchMakerLocalhost': 'local',
++        'oslo.messaging._drivers.matchmaker_redis.MatchMakerRedis': 'redis',
++        'oslo.messaging._drivers.matchmaker_ring.MatchMakerRing': 'ring',
++        'oslo.messaging._drivers.matchmaker.MatchMakerLocalhost': 'local'}
++    if mm_name in mm_mapping:
++        LOG.warn(_LW('rpc_zmq_matchmaker = %(old_val)s is deprecated. '
++                     'It is suggested to change the value to %(new_val)s.'),
++                 {'old_val': mm_name, 'new_val': mm_mapping[mm_name]})
++        mm_name = mm_mapping[mm_name]
++
+     if not matchmaker:
+-        mm = CONF.rpc_zmq_matchmaker
+-        if mm.endswith('matchmaker.MatchMakerRing'):
+-            mm.replace('matchmaker', 'matchmaker_ring')
+-            LOG.warn(_('rpc_zmq_matchmaker = %(orig)s is deprecated; use'
+-                       ' %(new)s instead') % dict(
+-                     orig=CONF.rpc_zmq_matchmaker, new=mm))
+-        matchmaker = importutils.import_object(mm, *args, **kwargs)
++        mgr = driver.DriverManager('oslo.messaging.zmq.matchmaker',
++                                   mm_name)
++        matchmaker = mgr.driver(*args, **kwargs)
+     return matchmaker
+ 
+ 
+--- a/setup.cfg
++++ b/setup.cfg
+@@ -49,6 +49,11 @@ oslo.messaging.notify.drivers =
+ 	test = oslo_messaging.notify._impl_test:TestDriver
+ 	noop = oslo_messaging.notify._impl_noop:NoOpDriver
+ 	routing = oslo_messaging.notify._impl_routing:RoutingDriver
++oslo.messaging.zmq.matchmaker =
++    # Matchmakers for ZeroMQ
++    redis = oslo_messaging._drivers.matchmaker_redis:MatchMakerRedis
++    ring = oslo_messaging._drivers.matchmaker_ring:MatchMakerRing
++    local = oslo_messaging._drivers.matchmaker:MatchMakerLocalhost
+ oslo.config.opts = 
+ 	oslo.messaging = oslo_messaging.opts:list_opts
+ 
