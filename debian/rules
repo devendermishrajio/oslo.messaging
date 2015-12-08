@@ -2,14 +2,6 @@
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
-#export PBR_VERSION=$(shell dpkg-parsechangelog --show-field Version)
-
-#PYTHONS:=$(shell pyversions -vr)
-#PYTHON3S:=$(shell py3versions -vr)
-
-#UPSTREAM_GIT = git://github.com/openstack/oslo.messaging.git
-#include /usr/share/openstack-pkg-tools/pkgos.make
-#export OSLO_PACKAGE_VERSION=$(VERSION)
 
 %:
 	dh $@  --with python2,systemd
